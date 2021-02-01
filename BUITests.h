@@ -1,6 +1,8 @@
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
+#include <GameFramework/Actor.h>
+#include "BUITests.generated.h"
 
 static const int TestFlags = (
 	  EAutomationTestFlags::EditorContext
@@ -9,21 +11,16 @@ static const int TestFlags = (
 	| EAutomationTestFlags::ProductFilter );
 
 // Dummy class for example
-class ABUIHero
+UCLASS()
+class ABUIHero : public AActor
 {
+	GENERATED_BODY()
 public:
 	int32 GetGold() const { return 0; }
 };
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST( FBUITestHeroGold, "BUI.Example", TestFlags )
-bool FBUITestHeroGold::RunTest( const FString& Parameters )
-{
-	//ABUIHero* Hero = new ABUIHero();
-	//delete Hero;
-	return true;
-}
-//////////////////////////////////////////////////////////////////////////
 
+// Simplest test you can run
 IMPLEMENT_SIMPLE_AUTOMATION_TEST( FBUIHelloWorldTest, "BUI.HelloWorld.Basic", TestFlags )
 bool FBUIHelloWorldTest::RunTest( const FString& Parameters )
 {
@@ -33,14 +30,33 @@ bool FBUIHelloWorldTest::RunTest( const FString& Parameters )
 
 //////////////////////////////////////////////////////////////////////////
 
+// Asynchronous function to create a hero
+DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER( FBUISetupHero, ABUIHero*, Hero );
+bool FBUISetupHero::Update()
+{
+	Hero = NewObject<ABUIHero>();
+	return true;
+}
+
+// Asynchronous function to create a hero
+DEFINE_LATENT_AUTOMATION_COMMAND_TWO_PARAMETER( FBUITestHero, FAutomationTestBase*, Test, const ABUIHero*, Hero );
+bool FBUITestHero::Update()
+{
+	Test->TestEqual( "Check that gold is zero", Hero->GetGold(), 0 );
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST( FBUIHelloWorldLatentTest, "BUI.HelloWorld.Latent", TestFlags )
 bool FBUIHelloWorldLatentTest::RunTest( const FString& Parameters )
 {
 	// Wait for 1.5s, then test
+	ABUIHero* Hero = nullptr;
+	ADD_LATENT_AUTOMATION_COMMAND( FBUISetupHero( Hero ) );
 	ADD_LATENT_AUTOMATION_COMMAND( FWaitLatentCommand( 1.5f ) );
-	TestEqual( "Testing that 2+2 == 4", 2 + 2, 4 );
+	ADD_LATENT_AUTOMATION_COMMAND( FBUITestHero( this, Hero ) );
 	return true;
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 

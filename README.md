@@ -1,7 +1,8 @@
 # UE4-FunctionalTests
 
 Example functional tests to go with
-[a tutorial on functional testing](https://benui.ca/unreal/test-organization/)
+[a tutorial on functional testing](https://benui.ca/unreal/unreal-testing-introduction/)
+
 
 ## Installation
 
